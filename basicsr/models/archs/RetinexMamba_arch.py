@@ -578,8 +578,7 @@ class RetinexMamba_Single_Stage(nn.Module):
         """
         super(RetinexMamba_Single_Stage, self).__init__()
 
-        #use hvi
-        self.trans = RGB_HVI()
+
 
 
         self.estimator = Illumination_Estimator(n_feat)  # 照明估计器，估计图像的照明成分。
@@ -596,10 +595,6 @@ class RetinexMamba_Single_Stage(nn.Module):
             output_img (Tensor): 增强后的输出图像张量。
         """
 
-        #use hvi
-        hvi = self.trans.HVIT(img)
-        x = hvi
-
         # 从输入图像中估计照明特征和照明图
         illu_fea, illu_map = self.estimator(img)  # illu_fea: 照明特征; illu_map: 照明图
         
@@ -611,10 +606,8 @@ class RetinexMamba_Single_Stage(nn.Module):
         # 使用去噪器进行图像增强，同时利用照明特征
         output_img = self.denoiser(input_img, illu_fea)
 
-        output_rgb = self.trans.PHVIT(output_img)
 
-        # return output_img
-        return output_rgb
+        return output_img
 
 
 class RetinexMamba(nn.Module):
@@ -634,6 +627,7 @@ class RetinexMamba(nn.Module):
             num_blocks (list): 每个阶段的块数，指定每个单阶段中的块数量。
         """
         super(RetinexMamba, self).__init__()
+
         self.stage = stage  # 网络的阶段数
 
         # 创建多个 RetinexMamba_Single_Stage 实例，每个实例都作为网络的一个阶段
@@ -642,6 +636,9 @@ class RetinexMamba(nn.Module):
         
         # 将所有阶段模块封装成一个顺序模型
         self.body = nn.Sequential(*modules_body)
+
+        # use hvi
+        self.trans = RGB_HVI()
     
     def forward(self, x):
         """
@@ -653,11 +650,19 @@ class RetinexMamba(nn.Module):
         返回:
             out (Tensor): 经过多个阶段处理后的输出图像张量。
         """
+
+        # use hvi
+        hvi = self.trans.HVIT(x)
+        x = hvi
+
         # 通过网络体进行图像处理
         out = self.body(x)
 
+        out_rgb = self.trans.PHVIT(out)
 
-        return out
+
+        # return out
+        return out_rgb
 
 
 if __name__ == '__main__':
