@@ -189,6 +189,8 @@ def main():
     result = create_train_val_dataloader(opt, logger)
     train_loader, train_sampler, val_loader, total_epochs, total_iters = result
 
+    resume_state = None
+
     # create model
     if resume_state:  # resume training
         check_resume(opt, resume_state['iter'])
