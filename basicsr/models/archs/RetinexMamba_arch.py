@@ -11,6 +11,7 @@ from torch.nn.init import _calculate_fan_in_and_fan_out
 from .SS2D_arch import SS2D
 from .IFA_arch import IFA
 import sys
+from .hvi import RGB_HVI
 print(sys.path)
 # 这两个函数 _no_grad_trunc_normal_ 和 trunc_normal_ 都用于初始化神经网络中的权重参数。它们将权重初始化为遵循截断正态分布的值，这种方法有助于在训练开始时改善网络的性能和稳定性。
 def _no_grad_trunc_normal_(tensor, mean, std, a, b):#这是一个内部函数，用于实际执行初始化过程。
@@ -576,6 +577,11 @@ class RetinexMamba_Single_Stage(nn.Module):
             num_blocks (list): 每个级别的块数量，用于定义每个级别的重复模块数。
         """
         super(RetinexMamba_Single_Stage, self).__init__()
+
+        #use hvi
+        self.trans = RGB_HVI()
+
+
         self.estimator = Illumination_Estimator(n_feat)  # 照明估计器，估计图像的照明成分。
         self.denoiser = Denoiser(in_dim=in_channels, out_dim=out_channels, dim=n_feat, level=level, num_blocks=num_blocks, d_state=d_state)  # 编解码获取最终结果
     
@@ -589,6 +595,11 @@ class RetinexMamba_Single_Stage(nn.Module):
         返回:
             output_img (Tensor): 增强后的输出图像张量。
         """
+
+        #use hvi
+        hvi = self.trans.HVIT(img)
+        x = hvi
+
         # 从输入图像中估计照明特征和照明图
         illu_fea, illu_map = self.estimator(img)  # illu_fea: 照明特征; illu_map: 照明图
         
@@ -646,12 +657,7 @@ class RetinexMamba(nn.Module):
 
 
 if __name__ == '__main__':
-    from fvcore.nn import FlopCountAnalysis
     model = RetinexMamba(stage=1,n_feat=40,num_blocks=[1,2,2]).cuda()
     print(model)
     inputs = torch.randn((1, 3, 256, 256)).cuda()
     model(inputs)
-    flops = FlopCountAnalysis(model,inputs)
-    n_param = sum([p.nelement() for p in model.parameters()])  # 所有参数数量
-    print(f'GMac:{flops.total()/(1024*1024*1024)}')
-    print(f'Params:{n_param}')
