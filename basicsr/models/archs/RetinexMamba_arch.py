@@ -611,7 +611,10 @@ class RetinexMamba_Single_Stage(nn.Module):
         # 使用去噪器进行图像增强，同时利用照明特征
         output_img = self.denoiser(input_img, illu_fea)
 
-        return output_img
+        output_rgb = self.trans.PHVIT(output_img)
+
+        # return output_img
+        return output_rgb
 
 
 class RetinexMamba(nn.Module):
@@ -652,6 +655,7 @@ class RetinexMamba(nn.Module):
         """
         # 通过网络体进行图像处理
         out = self.body(x)
+
 
         return out
 
