@@ -166,13 +166,13 @@ def main():
         opt['path']['resume_state'] = resume_state
 
     # load resume states if necessary，resume_state是重新训练的时候接上的吗？
-    if opt['path'].get('resume_state'):
-        device_id = torch.cuda.current_device()
-        resume_state = torch.load(
-            opt['path']['resume_state'],
-            map_location=lambda storage, loc: storage.cuda(device_id))
-    else:
-        resume_state = None
+    # if opt['path'].get('resume_state'):
+    #     device_id = torch.cuda.current_device()
+    #     resume_state = torch.load(
+    #         opt['path']['resume_state'],
+    #         map_location=lambda storage, loc: storage.cuda(device_id))
+    # else:
+    #     resume_state = None
 
     # mkdir for experiments and logger
     if resume_state is None:
